@@ -50,11 +50,14 @@ class RabinCryptosystem:
         r2 = N - r1
         r3 = (yp * self.p * m_q - yq * self.q * m_p) % N
         r4 = N - r3
+
+        print(r1, r2, r3, r4)
         
         # Try to decode each root
         for r in [r1, r2, r3, r4]:
             try:
                 decrypted_message = r.to_bytes((r.bit_length() + 7) // 8, 'big').decode('utf-8')
+                print(decrypted_message)
                 return decrypted_message
             except (UnicodeDecodeError, ValueError):
                 continue
