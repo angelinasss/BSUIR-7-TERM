@@ -1,6 +1,5 @@
 import random
 import binascii
-from typing import List, Union
 
 
 class STB3410131:
@@ -30,7 +29,7 @@ class STB3410131:
     ROUNDS = 8
     KEY_SIZE = 32    # bytes
 
-    def __init__(self, key: Union[bytes, List[int]]):
+    def __init__(self, key):
         if len(key) != self.KEY_SIZE:
             raise ValueError(f"Key must be {self.KEY_SIZE} bytes long")
             
@@ -38,41 +37,41 @@ class STB3410131:
         key_words = [self.bytes_to_word(key[i:i+4]) for i in range(0, len(key), 4)]
         self.round_keys = [key_words[i % 8] for i in range(56)]
 
-    def rotate_left(self, value, shift: int) -> int:
+    def rotate_left(self, value, shift):
         bit_length = 32
         shift = shift % bit_length
         return ((value << shift) | (value >> (bit_length - shift))) & 0xFFFFFFFF
 
-    def word_to_bytes(self, word: int) -> List[int]:
+    def word_to_bytes(self, word):
         return [(word >> shift) & 0xFF for shift in [24, 16, 8, 0]]
 
-    def bytes_to_word(self, bytes_list: List[int]) -> int:
+    def bytes_to_word(self, bytes_list):
         return sum(byte << shift for byte, shift in zip(bytes_list, [24, 16, 8, 0]))
 
-    def reverse_word(self, word: int) -> int:
+    def reverse_word(self, word):
         bytes_list = self.word_to_bytes(word)
         bytes_list.reverse()
         return self.bytes_to_word(bytes_list)
 
-    def modular_subtract(self, x: int, y: int) -> int:
+    def modular_subtract(self, x, y):
         return (x - y) & 0xFFFFFFFF
 
-    def modular_add(self, *values: int) -> int:
+    def modular_add(self, *values):
         result = 0
         for value in values:
             result = (result + self.reverse_word(value)) & 0xFFFFFFFF
         return self.reverse_word(result)
 
-    def h_box_substitution(self, byte: int) -> int:
+    def h_box_substitution(self, byte):
         return self.H_BOX[byte]
 
-    def g_function(self, x: int, k: int) -> int:
+    def g_function(self, x, k):
         # Apply H-box to each byte
         substituted = self.bytes_to_word([self.h_box_substitution(byte) for byte in self.word_to_bytes(x)])
         # Circular shift and return result
         return self.reverse_word(self.rotate_left(self.reverse_word(substituted), k))
 
-    def encrypt_block(self, plaintext: List[int]) -> List[int]:
+    def encrypt_block(self, plaintext):
         if len(plaintext) != self.BLOCK_SIZE:
             raise ValueError(f"Block size must be {self.BLOCK_SIZE} bytes")
             
@@ -107,7 +106,7 @@ class STB3410131:
             
         return result
 
-    def decrypt_block(self, ciphertext: List[int]) -> List[int]:
+    def decrypt_block(self, ciphertext):
         if len(ciphertext) != self.BLOCK_SIZE:
             raise ValueError(f"Block size must be {self.BLOCK_SIZE} bytes")
             
@@ -148,11 +147,11 @@ def char_to_extended_ascii(ch):
     return code if code < 140 else code - 900
 
 
-def extended_ascii_to_char(code: int) -> str:
+def extended_ascii_to_char(code):
     return chr(code) if code < 140 else chr(code + 900)
 
 
-def generate_key() -> bytes:
+def generate_key():
     return bytes(random.randint(0, 255) for _ in range(32))
 
 
